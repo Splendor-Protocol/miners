@@ -25,7 +25,19 @@ import openminers
 from typing import List, Dict
 
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM, StoppingCriteria, StoppingCriteriaList, pipeline
+
+class StopOnTokens(StoppingCriteria):
+    def __init__(self, stop_token_ids: List[int]):
+        self.stop_token_ids = stop_token_ids
+
+    def __call__(
+        self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs
+    ) -> bool:
+        for stop_id in self.stop_token_ids:
+            if input_ids[0][-1] == stop_id:
+                return True
+        return False
 
 class CerebrasBTLMMiner( openminers.BasePromptingMiner ):
 
@@ -52,7 +64,12 @@ class CerebrasBTLMMiner( openminers.BasePromptingMiner ):
 
         bittensor.logging.info( "Loading BTLM 3B model..." )
         model = AutoModelForCausalLM.from_pretrained( "cerebras/btlm-3b-8k-base", trust_remote_code=True, low_cpu_mem_usage=True, torch_dtype="auto" )
-        tokenizer = AutoTokenizer.from_pretrained( "cerebras/btlm-3b-8k-base", trust_remote_code=True,  )
+        tokenizer = AutoTokenizer.from_pretrained( "cerebras/btlm-3b-8k-base", trust_remote_code=True, )
+
+        self.stop_token_ids = tokenizer.convert_tokens_to_ids(
+            ["<|endoftext|>"]
+        )
+        self.stop = StopOnTokens(self.stop_token_ids)
 
         # Determine correct device id (int) from device string.
         if self.config.btlm.device == 'cuda':
@@ -112,9 +129,21 @@ class CerebrasBTLMMiner( openminers.BasePromptingMiner ):
         else:
             history = self._process_history(messages)
             history += 'assistant: '
-
         bittensor.logging.debug( "History: {}".format( history ) )
-        generation = self.pipe( history )[0]['generated_text'].split(':')[-1].replace( str( history ), "")
+        generation = (
+            self.pipe(
+                history,
+                temperature=self.config.btlm.temperature,
+                max_new_tokens=self.config.btlm.max_length,
+                no_repeat_ngram_size=self.config.btlm.no_repeat_ngram_size,
+                do_sample=self.config.btlm.do_sample,
+                eos_token_id=self.pipe.tokenizer.eos_token_id,
+                pad_token_id=self.pipe.tokenizer.pad_token_id,
+                stopping_criteria=StoppingCriteriaList([self.stop]),
+            )[0]["generated_text"]
+            .split(":")[-1]
+            .replace(str(history), "")
+        )
         bittensor.logging.debug( "Generation: {}".format( generation ) )
         return generation
 
