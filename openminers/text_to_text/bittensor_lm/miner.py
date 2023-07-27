@@ -57,6 +57,7 @@ class CerebrasBTLMMiner( openminers.BasePromptingMiner ):
         parser.add_argument("--btlm.do_prompt_injection", action="store_true", default=False, help='Whether to use a custom "system" prompt instead of the one sent by bittensor.')
         parser.add_argument("--btlm.system_prompt", type=str, help="What prompt to replace the system prompt with", default="A chat between a curious user and an artificial intelligence assistant.\nThe assistant gives helpful, detailed, and polite answers to the user's questions. ")
         parser.add_argument("--btlm.use_deepspeed", action="store_true", default=False, help="Whether to use deepspeed or not (if not, uses vanilla huggingface).")
+        parser.add_argument("--btlm.temperature", type=float, default=0.7, help="Sampling temperature.")
 
     def __init__( self, *args, **kwargs ):
         super( CerebrasBTLMMiner, self ).__init__( *args, **kwargs )
