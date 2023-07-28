@@ -1,3 +1,12 @@
+# Bittensor code and protocol version.
+__version__ = "0.0.1"
+version_split = __version__.split(".")
+__version_as_int__ = (
+    (100 * int(version_split[0]))
+    + (10 * int(version_split[1]))
+    + (1 * int(version_split[2]))
+)
+
 # Base Miner imports
 from .base.miner import BaseMiner as BaseMiner
 from .base.prompting_miner import BasePromptingMiner as BasePromptingMiner
@@ -43,3 +52,16 @@ from .text_to_text.cerebras.miner import CerebrasMiner as cerebras
 from .text_to_text.falcon.miner import FalconMiner as falcon
 from .text_to_text.hermes.miner import HermesMiner as HermesMiner
 from .text_to_text.bittensor_lm.miner import CerebrasBTLMMiner as bittensor_lm
+
+# ASCII art - "Mine!"
+print(
+    """
+
+    ███╗   ███╗██╗███╗   ██╗███████╗██╗██╗██╗
+    ████╗ ████║██║████╗  ██║██╔════╝██║██║██║
+    ██╔████╔██║██║██╔██╗ ██║█████╗  ██║██║██║
+    ██║╚██╔╝██║██║██║╚██╗██║██╔══╝  ╚═╝╚═╝╚═╝
+    ██║ ╚═╝ ██║██║██║ ╚████║███████╗██╗██╗██╗
+    ╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚══════╝╚═╝╚═╝╚═╝
+"""
+)
